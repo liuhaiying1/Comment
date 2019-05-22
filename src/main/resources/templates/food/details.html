@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.springframework.org/schema/jdbc">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <link href="/plugins/layui/css/layui.css" rel="stylesheet" media="all"/>
+    <link rel="stylesheet" href="/css/list.css">
+    <style>
+        body {
+            background-color: #F2F2F2;
+        }
+
+        .post {
+            background: #f8f8f8;
+        }
+
+        .top_menu {
+            margin-top: 20px;
+        }
+
+        .post-item .post-list .post-image img.radius {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+        }
+
+        .post-item .post-list .post-content {
+            width: 80%;
+        }
+
+        .post-item .post-list .post-content .post-name {
+            font: 16px "微软雅黑";
+            height: 33px;
+        }
+
+        .layui-upload-img {
+            width: 92px;
+            height: 92px;
+            margin: 0 10px 10px 0;
+        }
+
+        .post-item .post-list li.post-item-evluate {
+            min-height: 255px;
+            height: 255px;
+        }
+
+        .layui-card-evaluate .post-list:hover {
+            background-color: #fafffb;
+            cursor: pointer;
+        }
+
+        .post-scan-time {
+            margin-left: 10px;
+        }
+
+        .image-container img:hover {
+            border: 1px dashed #eaeaea;
+        }
+    </style>
+</head>
+
+<body>
+<div class="post-item layui-row">
+    <div class="layui-col-md10 layui-col-md-offset1 top_menu">
+        <div class="layui-col-md12">
+            <div class="layui-card">
+                <div class="layui-card-body">
+                    <div class="post-wrap post-wrap-bussiness"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="post layui-col-md10 layui-col-md-offset1">
+        <div class="layui-card">
+            <div class="layui-card-header">
+                <button class="layui-btn layui-btn-warm" type="button" onclick="vm.edit()">写点评</button>
+                <button class="layui-btn layui-btn-danger" type="button" onclick="vm.collect()"><i
+                        class="layui-icon-star layui-icon" id="layui-icon-start"></i>收藏
+                </button>
+                <button class=" layui-btn layui-btn-default" onclick="vm.map();"><i class="layui-icon layui-icon-more"></i> 查看地图</button>
+            </div>
+            <div class="layui-card-body">
+
+                <div class="layui-tab layui-tab-brief" lay-filter="docDemoTabBrief">
+                    <ul class="layui-tab-title">
+                        <li class="layui-this">推荐菜肴</li>
+                        <li>店家环境</li>
+                        <li>食品安全档案</li>
+                    </ul>
+                    <div class="layui-tab-content" style="height: 100px;">
+                        <div class="layui-tab-item layui-show">
+                            <div id="layer-photos-ifrecommend" class="image-container">
+                                    <!--推荐菜肴图片-->
+                            </div>
+                        </div>
+                        <div class="layui-tab-item">
+                            <div id="layer-photos-env" class="image-container">
+                                    <!--视频环境图片-->
+                            </div>
+                        </div>
+                        <div class="layui-tab-item">
+                            <div id="layer-photos-imgFileName" class="image-container">
+                                    <!--食品安全档案图片-->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="layui-card-body">
+                评论列表(<span id="count">0</span>)
+            </div>
+        </div>
+        <div class="layui-card-evaluate">
+        </div>
+        <div id="laypage"></div>
+    </div>
+</div>
+<script src="/plugins/jquery.min.js"></script>
+<script src="/plugins/layui/layui.all.js"></script>
+<script src="/js/main.js"></script>
+<script src="/js/jquery.cookie.js"></script>
+<script type="text/javascript" th:inline="none">
+    var page = 1; //设置首页页码
+    var limit = 15;  //设置一页显示的条数
+    var total;    //总条数
+    var bussinessId = 0;
+    var bussinessName = "";
+    var vm = {
+        setForm: function (id) {     //id由前一个页面传过来，是商家的id
+            com.ajax({
+                url: '/bussiness/' + id,
+                type: 'get',
+                success: function (res) {
+                    bussinessName = res.title;
+                    var html = '';
+                    html += com.format_str('<ul class="post-list ">\
+                            <li class="clearfix">\
+                            <div class="post-image">\
+                            <a href="/food/details?id={0}"><img src="/file/download?fileToken={1}&newName={1}"  onerror="javascript:this.src=\'/images/face.jpg\';"></a>\
+                            </div>\
+                            <div class="post-content">\
+                            <div class="post-title"><a href="/food/details?id={0}">{9}</a></div>\
+                        <div class="post-other">\
+                            <div class="post-other-left">\
+                            <span class="post-username">营业时间:&nbsp;{2}</span>\
+                        <span>&nbsp;商家电话:</span>\
+                        <span class="post-time">&nbsp;{3}</span>\
+                        <span>&nbsp;人均:&nbsp;</span>\
+                        <span class="post-reply-time">{4}</span>\
+                         <span>&nbsp;浏览量:&nbsp;</span>\
+                         <span class="post-reply-time">{10}</span>\
+                            </div>\
+                            <div class="post-other-right">\
+                            <span class="post-reply-count">口味:</span>&nbsp;{5}\
+                            <span class="post-like-count">环境:</span>&nbsp;{6}\
+                            <span class="post-scan-count">服务:</span>&nbsp;{7}\
+                            </div>\
+                            </div>\
+                            <div class="post-other">\
+                            <div class="post-other-left">\
+                            地址:<span class="">{8}</span>\
+                        </div>\
+                        </div>\
+                        </div>\
+                        </li>\
+                        </ul>', id, res.bussinessFile, res.bussinessHours, res.phone, res.percapiita, res.flavor, res.env, res.service, res.city + " " + res.address, res.title, res.pre);
+                    $(".post-wrap-bussiness").empty().append(html);   //动态加载商家首页的头部
+
+                    <!--显示食品环境图片-->
+                    if (res.envFile != '')
+                    {
+                        html = '';
+                        $.each(res.envFile.split('*'), function (i, v) {
+                            var src = '/file/download?fileToken=' + v + '&newName=' + v;
+                            var img = '<img layer-src=' + src + ' title="点击预览" src=' + src + ' class="layui-upload-img" data-id="' + v + '" alt="' + v + '">';
+                            html += img;
+                        })
+                        if (html == "") {
+                            html += '<span class="layui-badge layui-bg-orange">暂无</span>'
+                        }
+                        $('#layer-photos-env').empty().append(html)
+                        //调用示例
+                        layer.photos({
+                            photos: '#layer-photos-env'
+                            , anim: 5 //0-6的选择，指定弹出图片动画类型，默认随机（请注意，3.0之前的版本用shift参数）
+                        });
+                    }
+
+                    <!--显示食品档案图片-->
+                    if (res.imgFileName != '')
+                    {
+                        html = '';
+                        $.each(res.imgFileName.split('*'), function (i, v) {
+                            var src = '/file/download?fileToken=' + v + '&newName=' + v;
+                            var img = '<img layer-src=' + src + ' title="点击预览" src=' + src + ' class="layui-upload-img" data-id="' + v + '" alt="' + v + '">';
+                            html += img;
+                        })
+                        if (html == "") {
+                            html += '<span class="layui-badge layui-bg-orange">暂无</span>'
+                        }
+                        $('#layer-photos-imgFileName').empty().append(html)
+                        //调用示例
+                        layer.photos({
+                            photos: '#layer-photos-imgFileName'
+                            , anim: 5 //0-6的选择，指定弹出图片动画类型，默认随机（请注意，3.0之前的版本用shift参数）
+                        });
+                    }
+                }
+            })
+        },  //setForm动态加载商家首页的头部
+        //loadData加载商家点评信息
+        loadData: function (bussinessId, page, size, search) {
+            com.ajax({
+                url: '/evaluate/getEvaluateByBussinessId/' + bussinessId,
+                async: false,
+                success: function (ccc) {
+
+                    com.ajax({
+                        type: 'get',
+                        url: '/evaluate/getsByBussinessId/' + bussinessId + '?page=' + page + '&size=' + size + '&search=' + search,
+                        success: function (res) {
+                            total = res.totalElements
+                            $('#count').text(total)
+                            var d = res.content;
+                            var html = ''
+                            for (var i = 0; i < d.length; i++) {
+                                var imgs = d[i].imgFile.split('*');
+                                var allimg = "";
+                                $.each(imgs, function (j, v) {
+                                    var src = '/file/download?fileToken=' + v + '&newName=' + v;
+                                    var img = '<img layer-src=' + src + ' title="点击预览" src=' + src + ' class="layui-upload-img" data-id="' + v + '" alt="' + v + '">';
+                                    allimg += '<div class="image-container" id="container' + i + '"><div class="delete-css"></div>' + img + '</div>'
+                                })
+
+                                var upload_list = com.format_str('<div id="layer-photos-{0}" class="layer-photos-demo">{1}</div>', d[i].id, allimg);
+                                var response = d[i].response == null ? "" : com.format_str('<div class="post-other-right">\n' +
+                                    '                                        <span class="post-all-count"><button class="layui-btn layui-btn-xs layui-btn-warm" onclick="vm.check(\'{0}\')">查看商家回复</button></span>&nbsp\n' +
+                                    '                               </div>\n', d[i].response)
+                                var collection = '';
+                                $.each(ccc, function (a, b) {
+                                    if (b.evaluateid == d[i].id) {
+                                        collection += com.format_str('<div class="post-other-right">\n' +
+                                            '  <span class="post-all-count"><span class="layui-icon-star-fill layui-icon" id="layui-icon-start-{0}" onclick="vm.starEvaluate(\'{0}\')"></span></span>&nbsp' +
+                                            '  </div>', d[i].id)
+                                    }
+                                });
+                                if (collection == '') {
+                                    collection += com.format_str('<div class="post-other-right">\n' +
+                                        '  <span class="post-all-count"><span class="layui-icon-star layui-icon" id="layui-icon-start-{0}" onclick="vm.starEvaluate(\'{0}\')"></span></span>&nbsp' +
+                                        '  </div>', d[i].id)
+                                }
+
+                                html += com.format_str('<div class="layui-card">\n' +
+                                    '            <div class="layui-card-body">\n' +
+                                    '                <div class="post-wrap">\n' +
+                                    '                    <ul class="post-list">\n' +
+                                    '                        <li class="clearfix  post-item-evluate">\n' +
+                                    '                            <div class="post-image"><img  class="radius" src="/file/getCurrentProfile/{0}"\n' +
+                                    '                                                         onerror="javascript:this.src=\'/images/face.jpg\';">\n' +
+                                    '                            </div>\n' +
+                                    '                            <div class="post-content">\n' +
+                                    '                                <div class="post-title post-name">{1}</div>\n' +
+                                    '                                <div class="post-other">\n' +
+                                    '                                    <div class="post-other-left-count">\n' +
+                                    '                                        <span class="post-all-count">总评{2}</span>&nbsp;\n' +
+                                    '                                        <span class="post-reply-count">口味{3}</span>&nbsp;\n' +
+                                    '                                        <span class="post-like-count">环境{4} </span>&nbsp;\n' +
+                                    '                                        <span class="post-scan-count">服务 {5}</span>\n' +
+                                    '                                    </div>\n' +
+                                    '<div class="post-other-left"><span class="post-scan-time">{9}</span></div>\n' +
+                                    response + collection +
+                                    '                                </div>\n' +
+                                    '                                <div class="post-other">\n' +
+                                    '                                    <div class="post-other-left">\n' +
+                                    '                                        <span class="post-message">{6}\n' +
+                                    '                                        </span>\n' +
+                                    '                                    </div>\n' +
+                                    '                                    <div class="post-other-right">\n' +
+                                    '                                        <span class="post-start-count" onclick="vm.start(\'{8}\')">赞(<span\n' +
+                                    '                                                id="start-count-{8}">{7}</span>)</span>&nbsp;\n' +
+                                    '                                    </div>\n' +
+                                    '                                </div>\n' +
+                                    '                                <div class="post-other">\n' +
+                                    '                                    <div class="post-other-left">\n' + upload_list +
+                                    '                                    </div>\n' +
+                                    '                                </div>\n' +
+                                    '                            </div>\n' +
+                                    '                        </li>\n' +
+                                    '                    </ul>\n' +
+                                    '                </div>\n' +
+                                    '            </div>\n' +
+                                    '        </div>', d[i].userid, d[i].username, d[i].overall, d[i].flavor, d[i].env, d[i].service, d[i].message, d[i].start, d[i].id, d[i].createTime);
+                            }
+                            $(".layui-card-evaluate").empty().append(html);
+
+                            for (var i = 0; i < d.length; i++) {
+                                //调用示例
+                                layui.layer.photos({
+                                    photos: '#layer-photos-' + d[i].id
+                                    , anim: 5 //0-6的选择，指定弹出图片动画类型，默认随机（请注意，3.0之前的版本用shift参数）
+                                });
+                            }
+
+                            vm.getPage(page);
+                        }
+                    });
+                }
+            })
+
+        },
+        //设置页面底端分页栏
+        getPage: function (page) {
+            var laypage = layui.laypage;
+            //执行一个laypage实例
+            laypage.render({
+                elem: 'laypage' //注意，这里的 test1 是 ID，不用加 # 号
+                , count: total //数据总数，从服务端得到
+                , curr: page
+                , first: '首页'
+                , last: '尾页'
+                , prev: '<em>←</em>'
+                , next: '<em>→</em>'
+                , limit: limit   //每页条数设置
+                , jump: function (obj, first) {
+                    //obj包含了当前分页的所有参数，比如：
+                    console.log(obj.curr); //得到当前页，以便向服务端请求对应页的数据。
+                    console.log(obj.limit); //得到每页显示的条数
+
+                    //首次不执行
+                    if (!first) {
+                        vm.loadData(bussinessId, obj.curr, obj.limit, '')  //加载数据
+                    }
+                }
+            });
+        },
+        //为已经有的评论点赞，若已经点过赞会有提示已点赞
+        start: function (id) {
+            var cook = $.cookie('start-count-' + id);
+            if (cook != undefined) {
+                layer.msg('您已点过赞!');
+                return;
+            }
+            com.ajax({
+                url: '/evaluate/star',
+                data: JSON.stringify({
+                    id: id
+                }),
+                success: function (r) {
+                    if (r.success == true) {
+                        layer.msg('成功点赞！', {icon: 1});
+                        $.cookie('start-count-' + id, r.errMsg)
+                        $('#start-count-' + id).html(r.errMsg)
+                    }
+                }
+            })
+        },
+        //写点评
+        edit: function () {
+            $.layerOpen({
+                title: '点评商家',
+                width: '800px',
+                height: '600px',
+                content: '/evaluate/editInfo',
+                btn: [],
+                success: function (iframebody, iframeWin, index) {
+                    iframeWin.cc.setForm(0, $.getQueryString('id'), function (data) {
+                        vm.loadData($.getQueryString('id'), page, limit, '')
+                        vm.setForm($.getQueryString('id'));
+                        $.layerClose(index);
+                    });
+                }
+            });
+        },
+        //查看商家回复
+        check: function (response) {
+            if (response == null) {
+                layer.msg('没有回复!');
+                return;
+            }
+            layer.open({
+                title: '商家回复'
+                , content: response
+            });
+        },
+        //显示食品推荐图片
+        setrecommend: function (bussinessid, page, size) {
+            com.ajax({
+                url: '/food/getRecommend?page=' + page + '&size=' + size + '&bussinessid=' + bussinessid,
+                success: function (res) {
+                    var html = '';
+                    $.each(res.content, function (i, vv) {
+                        var v = vv.food;
+                        var src = '/file/download?fileToken=' + v + '&newName=' + v;
+                        var img = '<img layer-src=' + src + ' title="点击预览" src=' + src + ' class="layui-upload-img" data-id="' + v + '" alt="' + v + '">';
+                        html += img
+                    })
+                    if (html == "") {
+                        html += '<span class="layui-badge layui-bg-orange">暂无</span>'
+                    }
+                    $('#layer-photos-ifrecommend').empty().append(html)
+                    //调用示例
+                    layer.photos({
+                        photos: '#layer-photos-ifrecommend'
+                        , anim: 5 //0-6的选择，指定弹出图片动画类型，默认随机（请注意，3.0之前的版本用shift参数）
+                    });
+                }
+            })
+        },
+        //显示当前商家的收藏状态,如果该商家已被当前用户收藏则收藏按钮填充
+        setcollect: function () {
+            com.ajax({
+                url: '/collection/getByBussinessId/' + bussinessId,
+                type: 'get',
+                success: function (res) {
+                    if (res.id != 0) {
+                        $('#layui-icon-start').removeClass('layui-icon-star').addClass('layui-icon-star-fill');
+                    }
+                }
+            })
+        },
+        //点击收藏商家触发该方法
+        collect: function () {
+            com.ajax({
+                url: '/collection/edit',
+                data: JSON.stringify({
+                    id: 0,
+                    bussinessid: bussinessId,
+                    evaluateid: 0,
+                    type: 1,
+                    bussinessName: bussinessName
+                }),
+                type: 'post',
+                success: function (res) {
+                    if (res.errMsg == '收藏成功') {
+                        $('#layui-icon-start').removeClass('layui-icon-star').addClass('layui-icon-star-fill');
+                    } else {
+                        $('#layui-icon-start').removeClass('layui-icon-star-fill').addClass('layui-icon-star');
+                    }
+                    layer.msg(res.errMsg)
+                }
+            })
+        },
+        //点赞评论
+        starEvaluate: function (evaluateid) {
+            com.ajax({
+                url: '/collection/edit',
+                data: JSON.stringify({
+                    id: 0,
+                    bussinessid: bussinessId,
+                    evaluateid: evaluateid,
+                    type: 2,
+                    bussinessName: bussinessName
+                }),
+                type: 'post',
+                success: function (res) {
+                    if (res.errMsg == '收藏成功') {
+                        $('#layui-icon-start-' + evaluateid).removeClass('layui-icon-star').addClass('layui-icon-star-fill');
+                    } else {
+                        $('#layui-icon-start-' + evaluateid).removeClass('layui-icon-star-fill').addClass('layui-icon-star');
+                    }
+                    layer.msg(res.errMsg)
+                }
+            })
+        },
+        //点击“查看地图”显示地图
+        map:function () {
+            $.layerOpen({
+                title: '查看地图',
+                width: '800px',
+                height: '600px',
+                content: '/bussiness/map?bussinessId='+bussinessId,
+                btn: [],
+                success: function (iframebody, iframeWin, index) {
+
+                }
+            });
+        }
+
+    }
+    bussinessId = $.getQueryString('id');  //获得URL中传过来的商家Id
+    vm.loadData(bussinessId, page, limit, '')  //加载商家数据
+    vm.setForm(bussinessId);
+    vm.setrecommend(bussinessId, page, limit)
+    vm.setcollect();
+</script>
+</body>
+</html>

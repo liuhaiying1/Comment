@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>美食点评</title>
+    <link href="/plugins/layui/css/layui.css" rel="stylesheet" media="all"/>
+
+    <style>
+        .layui-upload-img {
+            width: 92px;
+            height: 92px;
+            margin: 0 10px 10px 0;
+        }
+    </style>
+</head>
+
+<body>
+<div class="layui-container" style="margin-top:15px;">
+    <form class="layui-form" method="post" action="/food/edit" id="v-app" lay-filter="example">
+        <div class="layui-form-item">
+            <label class="layui-form-label"><span style="color:red">*</span>类别名称</label>
+            <div class="layui-input-block">
+                <input type="hidden" name="id"/>
+                <input type="hidden" name="bussinessid">
+                <select name="typeid" id="typeid"></select>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label"><span style="color:red">*</span>美食名</label>
+            <div class="layui-input-block">
+                <input type="hidden" name="food">
+                <button type="button" class="layui-btn" id="food">
+                    <i class="layui-icon">&#xe67c;</i>上传图片
+                </button>
+                <div class="layui-upload-list">
+                    <div class="delete-css">
+                        <button id="upload_img_dddd" type="button" class="layui-btn layui-btn-danger layui-btn-xs">删除
+                        </button>
+                    </div>
+                    <img class="layui-upload-img" id="demo1" onerror="javascript:this.src='/images/face.jpg'">
+                </div>
+            </div>
+
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label"><span style="color:red">*</span>美食名</label>
+            <div class="layui-input-block">
+                <input type="text" name="introduce" required lay-verify="required" placeholder="请输入美食名"
+                       autocomplete="off"
+                       class="layui-input">
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label"><span style="color:red">*</span>价格</label>
+            <div class="layui-input-block">
+                <input type="number" name="price" required lay-verify="required" placeholder="请输入价格" autocomplete="off"
+                       class="layui-input">
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <div class="layui-inline">
+                <label class="layui-form-label"><span style="color:red">*</span>排序</label>
+                <div class="layui-input-inline">
+                    <input type="number" name="sort" required lay-verify="required" placeholder="请输入排序"
+                           autocomplete="off"
+                           class="layui-input">
+                </div>
+            </div>
+            <div class="layui-inline">
+                <label class="layui-form-label"><span style="color:red">*</span>是否推荐</label>
+                <div class="layui-input-inline">
+                    <input type="checkbox" name="ifrecommend" lay-skin="switch" lay-text="是|否">
+                </div>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <div class="layui-input-block">
+                <button class="layui-btn" lay-submit="" type="button" lay-filter="form">立即提交</button>
+                <button type="reset" class="layui-btn layui-btn-primary">重置</button>
+            </div>
+        </div>
+    </form>
+</div>
+
+<script src="/plugins/jquery.min.js"></script>
+<script src="/plugins/layui/layui.all.js"></script>
+<script src="/js/main.js"></script>
+<script type="text/javascript" th:inline="none">
+    var cc = {
+        setForm: function (id, callback) {
+            $("#upload_img_dddd").on('click', function () {
+                $('#demo1').attr('src', '');
+                $('input[name=food]').val('');
+            });
+            layui.use(['form'], function () {
+                var form = layui.form;
+                //自定义验证规则
+                form.verify({});
+
+                //执行实例
+                var uploadInst = layui.upload.render({
+                    elem: '#food' //绑定元素
+                    , url: '/file/upload' //上传接口
+                    , accept: 'images'
+                    , done: function (res) {
+                        if (res.success) {
+                            $('input[name=food]').val(res.errCode)
+                            $('#demo1').attr('src', '/file/download?fileToken=' + res.errCode + '&newName=' + res.errCode);
+                        } else {
+                            return layer.msg('上传失败');
+                        }
+                    }
+                    , error: function () {
+                        layer.msg('上传失败！');
+                    }
+                });
+                //监听提交
+                layui.form.on('submit(form)', function (data) {
+                    if (data.field.typeid == 0) {
+                        layer.msg('请选择类别名称!');
+                        return;
+                    }
+                    if (data.field.food == "") {
+                        layer.msg('请上传图片!');
+                        return;
+                    }
+                    if (data.field.ifrecommend == "on") {
+                        data.field.ifrecommend = 1;
+                    } else {
+                        data.field.ifrecommend = 0;
+                    }
+                    com.ajax({
+                        url: data.form.action,
+                        data: JSON.stringify(data.field),
+                        showMsg: true,
+                        success: function () {
+                            callback && callback();
+                        }
+                    });
+                    return false;
+                });
+
+                com.ajax({
+                    type: 'get',
+                    url: '/type/?page=1&size=100000&search=',
+                    success: function (res) {
+                        $('#typeid').append('<option value="0">请选择</option>');
+                        $.each(res.content, function (i, v) {
+                            $('#typeid').append('<option value="' + v.id + '">' + v.name + '</option>');
+                        });
+                        layui.form.render();
+
+                        com.getInfoById('/food', id,
+                            function (res) {
+                                if (res.food) {
+                                    $('input[name=food]').val(res.food)
+                                    $('#demo1').attr('src', '/file/download?fileToken=' + res.food + '&newName=' + res.food);
+                                }
+                                if (res.ifrecommend == 1) {
+                                    form.val('example', {
+                                        "ifrecommend": true
+                                    });
+                                } else {
+                                }
+                                layui.form.render();
+                            });
+                    }
+                })
+
+            });
+        }
+    }
+</script>
+</body>
+</html>

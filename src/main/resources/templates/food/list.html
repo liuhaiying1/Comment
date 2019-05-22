@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.springframework.org/schema/jdbc">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <link href="/plugins/layui/css/layui.css" rel="stylesheet" media="all"/>
+    <link rel="stylesheet" href="/css/list.css">
+    <link rel="stylesheet" href="/plugins/city-picker/city-picker.css">
+    <style>
+        body {
+            background-color: #F2F2F2;
+        }
+
+        .post {
+            background: #f8f8f8;
+        }
+
+        .top_menu {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+
+<body>
+<div class="post-item layui-row">
+    <div class="layui-col-md10 layui-col-md-offset1 top_menu">
+        <div class="layui-col-md12">
+            <div class="layui-card">
+                <div class="layui-card-header">查询面板</div>
+                <div class="layui-card-body">
+                    <form class="layui-form" method="post">
+                        <div class="layui-form-item">
+                            <div class="layui-inline">
+                                <label class="layui-form-label width_auto text-r" style="margin-top:2px">省市县：</label>
+                                <div class="layui-input-inline" style="width:400px">
+                                    <input type="text" autocomplete="on" class="layui-input" id="city" name="city"
+                                           readonly="readonly" data-toggle="city-picker" placeholder="请选择">
+                                </div>
+                            </div>
+                            <div class="layui-inline">
+                                <label class="layui-form-label">地址</label>
+                                <div class="layui-input-inline" style="width:400px">
+                                    <input type="text" name="address" placeholder="请输入地址" autocomplete="off" class="layui-input">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="layui-form-item">
+                            <div class="layui-inline">
+                                <label class="layui-form-label">排序列</label>
+                                <div class="layui-input-inline" style="width: 400px;">
+                                    <input type="radio" name="orderby" value="pre" title="浏览量" checked>
+                                    <input type="radio" name="orderby" value="flavor" title="口味">
+                                    <input type="radio" name="orderby" value="env" title="环境">
+                                    <input type="radio" name="orderby" value="service" title="服务">
+                                </div>
+                            </div>
+                            <div class="layui-inline">
+                                <label class="layui-form-label">排序方式</label>
+                                <div class="layui-input-inline">
+                                    <input type="checkbox" checked name="direction" lay-skin="switch"
+                                           lay-filter="switchTest" lay-text="升序|降序">
+                                </div>
+                                <button class="layui-btn layui-btn-danger" lay-submit="" type="button"
+                                        lay-filter="search"><i class="layui-icon layui-icon-search"></i>查询
+                                </button>
+                                <button class="layui-btn layui-btn-warm" lay-submit="" type="button"
+                                        lay-filter="set"><i class="layui-icon layui-icon-set"></i>设置我的位置
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="post layui-col-md10 layui-col-md-offset1">
+        <div class="post-wrap">
+        </div>
+        <div id="laypage"></div>
+    </div>
+</div>
+<script src="/plugins/jquery.min.js"></script>
+<script src="/plugins/layui/layui.all.js"></script>
+<script src="/js/main.js"></script>
+
+<script src="/plugins/city-picker/city-picker.data.js"></script>
+<script src="/plugins/city-picker/city-picker.js"></script>
+<script type="text/javascript"
+        src="http://api.map.baidu.com/api?ak=hnbepoAdkngYjUInMiwRUSC4gRtLADLa&v=2.0&services=false"></script>
+<script type="text/javascript" src="/js/jquery.cookie.js"></script>
+<script type="text/javascript" th:inline="none">
+
+
+    $(function () {
+        var page = 1; //设置首页页码
+        var limit = 15;  //设置一页显示的条数
+        var total;    //总条数
+        var city = "", address = "", direction = "DESC", orderby = "pre";
+        //按要求对美食进行排名并且显示出来
+        var vm = {
+            loadData: function (page, size, search, city, address, orderby, direction) {
+                com.ajax({
+                    type: 'get',
+                    url: '/bussiness/passaudit/?page=' + page + '&size=' + size + '&search=' + search + '&city=' + city + '&address=' + address + '&orderby=' + orderby + '&direction=' + direction,
+                    success: function (res) {
+                        total = res.totalElements
+                        var d = res.content;
+                        var html = ''
+                        for (var i = 0; i < d.length; i++) {
+                            html += com.format_str('<ul class="post-list">\
+                            <li class="clearfix">\
+                            <div class="post-image">\
+                            <a href="/food/details?id={0}"><img src="/file/download?fileToken={1}&newName={1}"  onerror="javascript:this.src=\'/images/face.jpg\';"></a>\
+                            </div>\
+                            <div class="post-content">\
+                            <div class="post-title"><a href="/food/details?id={0}">{9}</a></div>\
+                        <div class="post-other">\
+                            <div class="post-other-left">\
+                            <span class="post-username">营业时间:{2}</span>\
+                        <span>&nbsp;商家电话:</span>\
+                        <span class="post-time">&nbsp;{3}</span>\
+                        <span>&nbsp;人均:&nbsp;</span>\
+                        <span class="post-reply-time">{4}</span>\
+                        <span>&nbsp;浏览量:&nbsp;</span>\
+                        <span class="post-reply-time">{10}</span>\
+                            </div>\
+                            <div class="post-other-right">\
+                            <span class="post-reply-count">口味:</span>&nbsp;{5}\
+                            <span class="post-like-count">环境: </span>&nbsp;{6}\
+                            <span class="post-scan-count">服务: </span>{7}\
+                            </div>\
+                            </div>\
+                            <div class="post-other">\
+                            <div class="post-other-left">\
+                            地址:<span class="">{8}</span>\
+                        </div>\
+                        </div>\
+                        </div>\
+                        </li>\
+                        </ul>', d[i].id, d[i].bussinessFile, d[i].bussinessHours, d[i].phone, d[i].percapiita, d[i].flavor, d[i].env, d[i].service, d[i].city + " " + d[i].address, d[i].title, d[i].pre);
+                        }
+                        $(".post-wrap").empty().append(html);  //按要求对美食进行排名并且显示出来
+                        vm.getPage(page);
+                    }
+                });
+
+            },
+            getPage: function (page) {
+                var laypage = layui.laypage;
+                //执行一个laypage实例
+                laypage.render({
+
+                    elem: 'laypage' //注意，这里的 test1 是 ID，不用加 # 号
+                    , count: total //数据总数，从服务端得到
+                    , curr: page
+                    , first: '首页'
+                    , last: '尾页'
+                    , prev: '<em>←</em>'
+                    , next: '<em>→</em>'
+                    , limit: limit   //每页条数设置
+                    , jump: function (obj, first) {
+                        if (!first) {
+                            vm.loadData(obj.curr, obj.limit, '', city, address, orderby, direction)  //加载数据
+                        }
+                    }
+                });
+            },
+            setForm: function () {
+                var currentPicker = new layui.cityPicker("#city", {
+                    provincename: "provinceId",
+                    cityname: "cityId",
+                    districtname: "districtId",
+                    level: 'districtId',// 级别
+                });
+
+                //监听提交
+                layui.form.on('submit(search)', function (data) {
+                    if (data.field.direction == 'on') {
+                        direction = "ASC";
+                    } else {
+                        direction = "DESC";
+                    }
+                    city = data.field.city;
+                    address = data.field.address;
+                    orderby = data.field.orderby;
+
+                    vm.loadData(page, limit, '', data.field.city, data.field.address, data.field.orderby, direction);
+                    return false;
+                });
+                layui.form.on('submit(set)',function (data) {
+                    if($.cookie('address')!=undefined){
+                        currentPicker.setValue($.cookie('address'));
+                        vm.setAddress();
+                    }
+                    return false;
+                })
+            },
+            setAddress: function () {
+                var point = new BMap.Point(116.501573, 39.900877);
+                var geoc = new BMap.Geocoder();
+                var geolocation = new BMap.Geolocation();
+                geolocation.getCurrentPosition(function (r) {
+                    if (this.getStatus() == BMAP_STATUS_SUCCESS) {
+                        var mk = new BMap.Marker(r.point);
+                        console.log("当前位置经度为:" + r.point.lng + "纬度为:" + r.point.lat);
+                        setLocation(r.point);
+                    } else {
+                        console.log('无法定位到您的当前位置，导航失败，请手动输入您的当前位置！' + this.getStatus());
+                    }
+                }, {enableHighAccuracy: true});
+
+                if (navigator.geolocation) {
+                    navigator.geolocation.getCurrentPosition(function (pos) {
+                        var point = new BMap.Point(pos.coords.longitude, pos.coords.latitude);
+                        setLocation(point);
+                    }, function (err) {
+                        console.log(err, 'err----')
+                    })
+                }
+
+                function setLocation(point) {
+                    geoc.getLocation(point, function (rs) {
+                        var addComp = rs.addressComponents;
+                        var result = addComp.province + addComp.city + addComp.district + addComp.street + addComp.streetNumber;
+                        console.log("当前的位置为:" + result);
+                        var address=addComp.province +'/'+ addComp.city +'/'+ addComp.district;
+                        $.cookie('address',address);
+                    });
+                }
+            }
+        }
+        vm.loadData(page, limit, '', city, address, orderby, direction);
+        vm.setForm();
+        vm.setAddress();
+    });
+
+</script>
+</body>
+</html>

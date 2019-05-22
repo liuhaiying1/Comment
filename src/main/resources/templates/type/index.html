@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>美食点评</title>
+    <link href="/plugins/layui/css/layui.css" rel="stylesheet" media="all" />
+    <style>
+        .top15{
+            margin-top: 15px;
+        }
+    </style>
+</head>
+
+<body>
+<div class="layui-fluid top15">
+    <script type="text/html" id="bardgGrid">
+        <a class="layui-btn layui-btn-xs" lay-event="edit">编辑</a>
+        <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del">删除</a>
+    </script>
+    <div class="layui-row toolbar">
+        <div class="layui-col-md6 layui-col-xs12">
+            <button class="layui-btn layui-btn-small" id="btn-refresh"><i class="layui-icon">&#x1002;</i>刷新</button>
+            <button class="layui-btn layui-btn-normal layui-btn-small" id="btn-add"><i class="layui-icon">&#xe654;</i>新增</button>
+        </div>
+        <div class="layui-col-md6  layui-col-xs12">
+            <div class="layui-col-md6 layui-col-xs12 text-right">
+                <input type="text" class="layui-input" id="search-name" placeholder="按类别名称查询" />
+            </div>
+            <div class="layui-col-md6 layui-col-xs12 text-right">
+                <button class="layui-btn layui-btn-danger layui-btn-small" id="btn-search"><i class="layui-icon">&#xe615;</i>查询</button>
+                <button class="layui-btn layui-btn-warm layui-btn-small" id="btn-clear"><i class="layui-icon">&#xe63d;</i>清空</button>
+            </div>
+        </div>
+    </div>
+    <table id="dgGrid" lay-filter="dgGrid"></table>
+</div>
+
+<script src="/plugins/jquery.min.js"></script>
+<script src="/plugins/layui/layui.all.js"></script>
+<script src="/js/main.js"></script>
+<script type="text/javascript"  th:inline="none">
+    //执行一个 table 实例
+    layui.table.render({
+        elem: '#dgGrid'
+        , height: 490
+        , method: 'get'   //获取所有类别信息
+        , url: '/type/'
+        , page: true
+        ,cellMinWidth: 80 //全局定义常规单元格的最小宽度，layui 2.2.1 新增
+        ,request:{
+            pageName: 'page' //页码的参数名称，默认：page
+            ,limitName: 'size' //每页数据量的参数名，默认：limit
+        }
+        ,where:{
+            search:$('#search-name').val()   //按照类别名查找
+        }
+        , cols: [[
+            { field: 'id', title: '编号', width: 60 }
+            , { field: 'name', title: '类别名称', width: 120 }
+            , {  width: 200, align: 'center', title: '操作', toolbar: '#bardgGrid' }
+        ]]
+        ,parseData: function(res){ //res 即为原始返回的数据
+            return {
+                "code": 0, //解析接口状态
+                "msg":"", //解析提示文本
+                "count": res.totalElements, //解析数据长度
+                "data": res.content //解析数据列表
+            };
+        }
+    });
+    com.bindFilter('/type/');
+
+    //点击“编辑”触发
+    var cc={
+        editInfo: function (title, id) {     //新增title为新增，id为0，编辑title为编辑，id为菜品id
+            $.layerOpen({
+                title: title,    //根据title确定是编辑还是新增
+                width: '600px',
+                height: '400px',
+                content: '/type/form',
+                btn: [],
+                success: function (iframebody, iframeWin, index) {
+                    iframeWin.cc.setForm(id, function (data) {
+                        $.layerClose(index);
+                        com.filter('/type/')
+                    });
+                }
+            });
+        },
+        bindEvent: function () {
+            //监听工具条
+            layui.table.on('tool(dgGrid)', function (obj) { //注：tool是工具条事件名，test是table原始容器的属性 lay-filter="对应的值"
+                var data = obj.data //获得当前行数据
+                    , layEvent = obj.event; //获得 lay-event 对应的值
+                if (layEvent === 'del') {
+                    layer.confirm('真的删除此条记录么', { icon: 3, title: '提示' }, function (index) {
+
+                        layer.close(index);
+                        $.post('/type/delete/' + data.id, {}, function (d) {
+                            layer.msg(d.errMsg);
+                            main.filter();
+                        }, 'json');
+                    });
+                } else if (layEvent === 'edit') {
+                    cc.editInfo('编辑', data.id);
+                }
+            });
+
+            $('#btn-add').on('click', function () {
+                cc.editInfo('新增', 0);
+            });
+        }
+    }
+
+    cc.bindEvent();
+</script>
+</body>
+</html>

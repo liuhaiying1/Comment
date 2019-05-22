@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>美食点评</title>
+    <link href="/plugins/layui/css/layui.css" rel="stylesheet" media="all"/>
+    <style>
+        .top15 {
+            margin-top: 15px;
+        }
+    </style>
+</head>
+
+<body>
+<div class="layui-fluid top15">
+    <script type="text/html" id="bardgGrid">
+        <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del">删除此收藏</a>
+    </script>
+    <div class="layui-row toolbar">
+        <div class="layui-col-md6 layui-col-xs12">
+            <button class="layui-btn layui-btn-small" id="btn-refresh"><i class="layui-icon">&#x1002;</i>刷新</button>
+            </button>
+        </div>
+        <div class="layui-col-md6  layui-col-xs12">
+            <div class="layui-col-md6 layui-col-xs12 text-right">
+                <input type="text" class="layui-input" id="search-name" placeholder="按商家店名查询"/>
+            </div>
+            <div class="layui-col-md6 layui-col-xs12 text-right">
+                <button class="layui-btn layui-btn-danger layui-btn-small" id="btn-search"><i class="layui-icon">&#xe615;</i>查询</button>
+                <button class="layui-btn layui-btn-warm layui-btn-small" id="btn-clear"><i  class="layui-icon">&#xe63d;</i>清空</button>
+            </div>
+        </div>
+    </div>
+    <table id="dgGrid" lay-filter="dgGrid"></table>   //js动态加载table  ,layui.table.render
+
+</div>
+
+<script src="/plugins/jquery.min.js"></script>
+<script src="/plugins/layui/layui.all.js"></script>
+<script src="/js/main.js"></script>
+<script type="text/javascript" th:inline="none">
+    var typeId = $.getQueryString("type");  //获取URL中type的值 ,type=1表示商家收藏，type=2表示点评收藏
+    var cols = [];
+    if (typeId == 1) {  //显示商家收藏
+        cols = [[
+            {field: 'id', title: '编号', width: 60}
+            , {
+                field: 'type', title: '类别', width: 100, templet: function (d) {  //templet自定义列
+                    if (d.type == 1) {
+                        return '<span class="layui-badge layui-bg-green">商家</span>'
+                    } else {
+                        return '<span class="layui-badge layui-bg-blue">点评信息</span>'
+                    }
+                }
+            },
+            {field: 'bussinessName', title: '商家店名', width: 180},
+            {
+                field: 'bussinessid', title: '查看详情', width: 180, templet: function (d) {
+                    return '<a href="/food/details?id=' + d.bussinessid + '"><span class="layui-badge layui-bg-green">查看收藏商家详情</span></a>'
+                }
+            },
+            , {width: 200, align: 'center', title: '操作', toolbar: '#bardgGrid'}  //绑定商家收藏中“删除此收藏”
+        ]];
+    } else {   //显示点评收藏
+        cols = [[
+            {field: 'id', title: '编号', width: 60}
+            , {
+                field: 'type', title: '类别', width: 100, templet: function (d) {
+                    if (d.type == 1) {
+                        return '<span class="layui-badge layui-bg-green">商家</span>'
+                    } else {
+                        return '<span class="layui-badge layui-bg-blue">点评信息</span>'
+                    }
+                }
+            },
+            {field: 'bussinessName', title: '商家店名', width: 180},
+            {field: 'message', title: '点评信息', width: 280},
+            {
+                field: 'bussinessid', title: '查看详情', width: 180, templet: function (d) {
+                    return '<a href="/food/details?id=' + d.bussinessid + '&evaluateid='+d.evaluateid+'"><span class="layui-badge layui-bg-green">查看点评信息</span></a>'
+                }
+            },
+            , {width: 200, align: 'center', title: '操作', toolbar: '#bardgGrid'}  //绑定点评收藏中“删除此收藏”
+        ]];
+    }
+    //执行一个 table 实例
+    layui.table.render({
+        elem: '#dgGrid'   //指定id="dgGrid"的table
+        , height: 490
+        , method: 'get'
+        , url: '/collection/'
+        , page: true   //开启分页
+        , cellMinWidth: 80 //全局定义常规单元格的最小宽度，layui 2.2.1 新增
+        , request: {
+            pageName: 'page' //页码的参数名称，默认：page
+            , limitName: 'size' //每页数据量的参数名，默认：limit
+        }
+        , where: {
+            search: $('#search-name').val(),
+            type: typeId
+        }
+        , cols: cols   //设置表头
+        , parseData: function (res) { //res 即为原始返回的数据
+            return {
+                "code": 0, //解析接口状态
+                "msg": "", //解析提示文本
+                "count": res.totalElements, //解析数据长度
+                "data": res.content //解析数据列表
+            };
+        }
+    });
+    com.bindFilter('/collection/');
+
+    var cc = {
+        bindEvent: function () {
+            //事件监听工具条
+            layui.table.on('tool(dgGrid)', function (obj) {   //tool是工具条事件名，,dgGrid是table原始容器的属性，lay-filter对应的值
+                var data = obj.data                              //获得当前行数据
+                    , layEvent = obj.event;                      //获得lay-event对应的值
+                if (layEvent === 'del') {
+                    layer.confirm('真的删除此条记录么', {icon: 3, title: '提示'}, function (index) {
+
+                        layer.close(index);     //向服务器发送删除命令
+                        $.post('/collection/delete/' + data.id, {}, function (d) {
+                            layer.msg(d.errMsg);
+                            main.filter();
+                        }, 'json');
+                    });
+                }
+            });
+        }
+    }
+
+    cc.bindEvent();
+</script>
+</body>
+</html>

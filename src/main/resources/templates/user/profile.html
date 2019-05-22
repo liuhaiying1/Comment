@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <title>个人资料</title>
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <link rel="stylesheet" href="/plugins/layui/css/layui.css" media="all"/>
+</head>
+
+<body>
+<script src="/plugins/jquery.min.js"></script>
+<script src="/plugins/layui/layui.all.js"></script>
+<script src="/js/main.js"></script>
+<script type="text/javascript" th:inline="none">
+
+
+    var cc = {
+        detail:function(){
+            location.href="/bussiness/editform"
+        },
+        setForm: function () {
+            com.ajax({
+                type: 'get'
+                , url: "/user/getUserInfo"
+                , success: function (result) {
+                    var getTpl = demo.innerHTML
+                        , view = document.getElementById('view');
+                    if (result.groupId == 1) {
+                        result.groupId = "普通用户"
+                    } else if (result.groupId == 2) {
+                        result.groupId = "商家"
+                    } else {
+                        result.groupId = "超级管理员"
+                    }
+                    layui.laytpl(getTpl).render(result, function (html) {
+                        view.innerHTML = html;
+                    });
+
+                    com.getInfoById('/bussiness', 0, function (res) {
+                        if (res.id != 0) {
+                            if (res.status == 3) {
+                                $('#btnSkin-form').text('认证商家(认证不通过)');
+                            } else if (res.status == 1){
+                                $('#btnSkin-form').text('认证商家(待审核)');
+                            }
+                        } else {
+
+                        }
+                    });
+                }
+                , error: function (ex) {
+                    console.warn(ex.responseText);
+                }
+            });
+        },
+       //修改个人信息
+        edit: function (id) {
+            $.layerOpen({
+                title: '修改个人信息',
+                width: '600px',
+                height: '400px',
+                content: '/user/setProfile',
+                btn: [],
+                success: function (iframebody, iframeWin, index) {
+                    iframeWin.cc.setForm(id, function (data) {
+                        $.layerClose(index);
+                        cc.setForm();
+                    });
+                }
+            });
+        },
+        //普通用户认证商家
+        bussiness: function () {
+            $.layerOpen({
+                title: '认证商家',
+                width: '600px',
+                height: '800px',
+                content: '/bussiness/form',
+                btn: [],
+                success: function (iframebody, iframeWin, index) {
+                    iframeWin.cc.setForm(0, function (data) {
+                        $.layerClose(index);
+                        cc.setForm();
+                    });
+                }
+            });
+        }
+    };
+    cc.setForm();
+</script>
+
+<div id="view"> </div>
+
+<script id="demo" type="text/html">
+    <fieldset class="layui-elem-field layui-field-title">
+        <legend>账户信息</legend>
+    </fieldset>
+    <button class="layui-btn" onclick="cc.edit('{{d.id}}')">修改个人信息</button>
+    {{# if(d.groupId =='普通用户'){ }}
+    <button class="layui-btn layui-btn-warm" id="btnSkin-form" onclick="cc.bussiness()">认证商家</button>
+    {{#  } else if (d.groupId=='商家'){ }}
+    <button class="layui-btn layui-btn-warm" onclick="cc.detail()">查看商家信息</button>
+    {{# } }}
+
+    <table class="layui-table">
+        <colgroup>
+            <col width="100">
+            <col>
+            <col width="100">
+            <col>
+        </colgroup>
+        <thead style="display:none" hidden="hidden">
+        <tr>
+            <th>1</th>
+            <th>2</th>
+            <th>3</th>
+            <th>4</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr>
+            <td><strong>用户账号:</strong></td>
+            <td>{{d.name}}</td>
+            <td><strong>姓名:</strong></td>
+            <td>{{ d.chName}}</td>
+        </tr>
+        <tr>
+            <td><strong>所属角色:</strong></td>
+            <td colspan="3">
+                {{d.groupId}}
+            </td>
+        </tr>
+        </tbody>
+    </table>
+
+    <br/>
+
+    <fieldset class="layui-elem-field layui-field-title">
+        <legend>个人信息</legend>
+    </fieldset>
+    <table class="layui-table">
+        <colgroup>
+            <col width="100">
+            <col>
+            <col width="100">
+            <col>
+        </colgroup>
+        <thead style="display:none" hidden="hidden">
+        <tr>
+            <th>1</th>
+            <th>2</th>
+            <th>3</th>
+            <th>4</th>
+        </tr>
+        </thead>
+        <tbody>
+        <td><strong>手机:</strong></td>
+        <td>{{d.phone}}</td>
+        <td><strong>邮箱:</strong></td>
+        <td>{{d.email}}</td>
+        </tr>
+        </tbody>
+    </table>
+    <fieldset class="layui-elem-field">
+        <legend>当前头像</legend>
+        <div class="layui-field-box">
+            <img src="/file/download?fileToken={{d.img }}&newName={{d.img}}" alt="默认的头像"
+                 onerror="javascript:this.src='/images/face.jpg';" style="width: 300px;height: 300px;"/>
+        </div>
+    </fieldset>
+</script>
+</body>
+
+</html>

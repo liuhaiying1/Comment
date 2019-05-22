@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
+    <style type="text/css">
+        body, html {width: 100%;height: 100%;overflow: hidden;margin:0;font-family:"微软雅黑";}
+        #allmap{width: 100%;height: 100%;overflow: hidden;margin:0;font-family:"微软雅黑";}
+        header{margin: 5px auto;font-size: 16px;}
+        .typein{width: 90px;height: 16px;font-size: 16px;}
+        /*.btn{color:#fff;height: 25px;}*/
+    </style>
+    <script type="text/javascript" src="http://api.map.baidu.com/api?v=2.0&ak=hnbepoAdkngYjUInMiwRUSC4gRtLADLa"></script>
+    <script type="text/javascript" src="http://developer.baidu.com/map/jsdemo/demo/convertor.js"></script>
+    <title>路线查询</title>
+</head>
+<body>
+<header>
+    <label for="start">起点:<input type="text" placeholder="请输入起点" class="typein" id="start"/></label>
+    <label for="zhongdian">终点:<input type="text" id="zhongdian" placeholder="请输入终点" class="typein"/></label>
+    <input type="button" class="btn" id="result" value="查询" onclick="chaxun()"/>
+</header>
+<div id="allmap"></div>
+</body>
+</html>
+<script type="text/javascript">
+    var map = new BMap.Map("allmap");
+    var lng , lat ;
+
+    var geolocation = new BMap.Geolocation();
+    geolocation.getCurrentPosition(function(r){
+        if(this.getStatus() == BMAP_STATUS_SUCCESS){
+
+            //map.panTo(r.point);
+            lng = r.point.lng;
+            lat = r.point.lat
+            //alert('您的位置：'+r.point.lng+','+r.point.lat);
+
+            map.centerAndZoom(new BMap.Point(lng, lat), 18);
+            var mk = new BMap.Marker(r.point);
+            map.addOverlay(mk);
+            map.addControl(new BMap.MapTypeControl());   //添加地图类型控件
+            map.enableScrollWheelZoom(true);     //开启鼠标滚轮缩放
+        }
+        else {
+            alert('failed'+this.getStatus());
+        }
+    });
+
+    function chaxun(){
+        map.clearOverlays();
+        var zhongdian = document.getElementById("zhongdian").value;
+        var qidian = document.getElementById("start").value;
+        //从定位地点到终点
+        //search(new BMap.Point(lng, lat),zhongdian,BMAP_DRIVING_POLICY_LEAST_DISTANCE);
+
+        //从输入的起点到终点
+        search(qidian,zhongdian,BMAP_DRIVING_POLICY_LEAST_DISTANCE);
+
+        function search(start,end,route){
+            var driving = new BMap.DrivingRoute(map, {renderOptions:{map: map, autoViewport: true},policy: route});
+            driving.search(start,end);
+        }
+    }
+</script>

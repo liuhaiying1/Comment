@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>美食点评</title>
+    <link href="/plugins/layui/css/layui.css" rel="stylesheet" media="all"/>
+    <style>
+        .layui-upload-img {
+            width: 92px;
+            height: 92px;
+            margin: 0 10px 10px 0;
+        }
+        .layui-badge {
+            height: 35px;
+            line-height: 35px;
+        }
+    </style>
+</head>
+
+<body>
+<div class="layui-container" style="margin-top:15px;">
+    <form class="layui-form" method="post" action="/evaluate/back" id="v-app">
+        <div class="layui-form-item">
+            <div class="layui-inline">
+                <label class="layui-form-label">状态</label>
+                <div class="layui-input-inline">
+                    <div id="status"
+                         class="layui-input layui-disabled">
+                    </div>
+                </div>
+            </div>
+            <div class="layui-inline">
+                <label class="layui-form-label">所评商家</label>
+                <div class="layui-input-inline">
+                    <a href="/businessid"></a>
+                </div>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <div class="layui-inline">
+                <label class="layui-form-label">点评人姓名</label>
+                <div class="layui-input-inline">
+                    <input type="hidden" name="id" value=""/>
+                    <input type="text" name="username" required lay-verify="required" autocomplete="off"
+                           class="layui-input layui-disabled" disabled>
+                </div>
+            </div>
+            <div class="layui-inline">
+                <label class="layui-form-label">点赞量</label>
+                <div class="layui-input-inline">
+                    <input type="text" name="start" required lay-verify="required" autocomplete="off"
+                           class="layui-input layui-disabled" disabled>
+                </div>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <div class="layui-inline">
+                <label class="layui-form-label">总体评价</label>
+                <div class="layui-input-inline">
+                    <div id="overall"></div>
+                </div>
+            </div>
+            <div class="layui-inline">
+                <label class="layui-form-label">口味</label>
+                <div class="layui-input-inline">
+                    <div id="flavor"></div>
+                </div>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <div class="layui-inline">
+                <label class="layui-form-label">环境</label>
+                <div class="layui-input-inline">
+                    <div id="env"></div>
+                </div>
+            </div>
+            <div class="layui-inline">
+                <label class="layui-form-label">服务</label>
+                <div class="layui-input-inline">
+                    <div id="service"></div>
+                </div>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">评价</label>
+            <div class="layui-input-block">
+                <textarea name="message" id="" cols="30" rows="10" class="layui-textarea layui-disabled"
+                          disabled></textarea>
+            </div>
+        </div>
+
+        <div class="layui-form-item">
+            <label class="layui-form-label">上传图片</label>
+            <div class="layui-input-block">
+                <blockquote class="layui-elem-quote layui-quote-nm" style="margin-top: 10px;">
+                    预览图：
+                    <div class="layui-upload-list" id="imgFile"></div>
+                </blockquote>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">商家回应</label>
+            <div class="layui-input-block">
+                <input type="text" name="response" required lay-verify="required" autocomplete="off"
+                       class="layui-input">
+            </div>
+        </div>
+        <div class="layui-form-item" th:if="${status}">
+            <div class="layui-input-block">
+                <button class="layui-btn" lay-submit="" lay-filter="form">回复</button>
+            </div>
+        </div>
+    </form>
+</div>
+
+<script src="/plugins/jquery.min.js"></script>
+<script src="/plugins/layui/layui.all.js"></script>
+<script src="/js/main.js"></script>
+<script type="text/javascript" th:inline="none">
+    var cc = {
+        setForm: function (id, callback) {
+
+            layui.use(['form'], function () {
+                var form = layui.form;
+                form.verify({});
+                var rate = layui.rate;
+
+                layui.form.on('submit(form)', function (data) {
+
+                    com.ajax({
+                        url: data.form.action,
+                        data: JSON.stringify(data.field),
+                        showMsg: true,
+                        success: callback
+                    });
+                    return false;
+                });
+
+                com.getInfoById('/evaluate', id,
+                    function (res) {     //res表示查看的评论
+                        rate.render({
+                            elem: '#overall'  //绑定元素
+                            , half: true
+                            , value: res.overall, readonly: true
+                        });
+                        rate.render({
+                            elem: '#flavor'  //绑定元素.
+                            , half: true
+                            , value: res.flavor, readonly: true
+                        });
+                        rate.render({
+                            elem: '#env'  //绑定元素
+                            , half: true
+                            , value: res.env, readonly: true
+                        });
+                        rate.render({
+                            elem: '#service'  //绑定元素
+                            , half: true
+                            , value: res.service, readonly: true
+                        });
+
+                        var s1 = res.imgFile.split('*');
+                        $.each(s1, function (i, v) {
+                            var img = '<img src="/file/download?fileToken=' + v + '&newName=' + v + '" class="layui-upload-img" data-id="' + v + '">';
+                            $('#imgFile').append('<div class="image-container" id="container' + i + '"><div class="delete-css"></div>' + img + '</div>')
+                        });
+
+                        if (res.status == 1) {
+                            $('#status').html('<span class="layui-badge layui-bg-orange">正常</span>')
+                        } else {
+                            $('#status').html('<span class="layui-badge layui-bg-blue">拉黑</span>')
+                        }
+
+                        layui.form.render();
+                    });
+            });
+        }
+    }
+</script>
+</body>
+</html>

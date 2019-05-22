@@ -1,0 +1,104 @@
+fieldset, img, input, button {
+    border: none;
+    padding: 0;
+    margin: 0;
+    outline-style: none;
+}
+
+ul, ol {
+    list-style: none;
+}
+
+select, input {
+    vertical-align: middle;
+}
+
+/*帖子列表模块*/
+.post-item .post-list {
+    padding: 0 10px;
+}
+
+.post-item .post-list li {
+    height: 125px;
+    padding: 15px 0;
+    border-bottom: 1px solid #E5E5E5;
+
+}
+
+.post-item .post-list .post-image {
+    float: left;
+}
+
+.post-item .post-list .post-image img {
+    display: block;
+    width: 172px;
+    height: 129px;
+    /*border-radius: 25px;*/
+}
+
+.post-item .post-list .post-content {
+    float: left;
+    width: 70%;
+    margin-left: 20px;
+}
+
+/*帖子标题模块*/
+.post-item .post-list .post-content .post-title {
+    font: 26px "微软雅黑";
+    height: 43px;
+}
+
+.post-item .post-list .post-content .post-title a {
+    color: #000;
+    font-weight: 500;
+    text-decoration: none;
+}
+
+.post-item .post-list .post-content .post-title a:hover {
+    color: #1abc9c;
+    font-weight: 500;
+    text-decoration: none;
+}
+
+.post-list:hover {
+    background-color: #e3e3e3;
+    cursor: pointer;
+}
+
+/*帖子其它模块*/
+.post-item .post-list .post-content .post-other {
+    font: 12px/20px "微软雅黑";
+    height: 23px;
+    padding: 3px;
+}
+
+.post-item .post-list .post-content .post-other .post-other-left {
+    float: left;
+}
+
+.post-item .post-list .post-content .post-other .post-other-left .post-username a {
+    margin-right: 20px;
+    color: #FF6547;
+    text-decoration: none;
+}
+
+.post-item .post-list .post-content .post-other .post-other-left .post-username a:hover {
+    color: #FF6547;
+}
+
+/*帖子其它模块右侧*/
+.post-item .post-list .post-content .post-other .post-other-right {
+    float: right;
+    color: orange;
+    font-weight: bold;
+}
+
+.post-item .post-list .post-content .post-other .post-other-left-count {
+    float: left;
+    color: orange;
+    font-weight: bold;
+}
+
+.post-item .post-list .post-content .post-other .post-start-count:hover,.post-item .post-list .post-content .post-other  .post-other-left-count .post-all-count {
+    color: red;
+}

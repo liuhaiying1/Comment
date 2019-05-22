@@ -1,0 +1,131 @@
+﻿<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>修改密码</title>
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <link rel="stylesheet" href="/plugins/layui/css/layui.css" media="all"/>
+    <script src="/plugins/jquery.min.js"></script>
+</head>
+
+<body>
+<div style="width:450px;margin:0px auto;padding-top:100px;">
+    <form class="layui-form changePwd" method="post" action="/user/ResetPwdByCurrentUser">
+        <div class="layui-form-item">
+            <label class="layui-form-label">用户账号:</label>
+            <div class="layui-input-block">
+                <input id="name" class="layui-input layui-btn-disabled" name="name" disabled="disabled"
+                       readonly="readonly">
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">旧密码</label>
+            <div class="layui-input-block">
+                <input type="password" value="" lay-verType="tips" placeholder="请输入旧密码" name="oldPwd" id="oldPwd"
+                       lay-verify="oldPwd" class="layui-input pwd">
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">新密码</label>
+            <div class="layui-input-block">
+                <input type="password" value="" lay-verType="tips" placeholder="请输入新密码" lay-verify="newPwd" id="newPwd" name="newPwd"
+                       class="layui-input pwd">
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">确认密码</label>
+            <div class="layui-input-block">
+                <input type="password" value="" id="newPwd2" lay-verType="tips" name="newPwd2" placeholder="请确认密码"
+                       lay-verify="newPwd2" class="layui-input pwd">
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <div class="layui-input-block">
+                <button class="layui-btn layui-btn-normal" type="button" lay-submit="" lay-filter="changePwd">立即修改
+                </button>
+            </div>
+        </div>
+    </form>
+</div>
+
+<script src="/plugins/jquery.min.js"></script>
+<script src="/plugins/layui/layui.all.js"></script>
+<script src="/js/main.js"></script>
+<script>
+
+    $(function () {
+        $(':input').keydown(function (event) {
+            if (event.keyCode === 13) {
+                $('[lay-filter="changePwd"]').click();
+            }
+        });
+        layui.use(['form', 'layer'], function () {
+
+            var form = layui.form;
+
+            com.ajax({
+                type: 'get'
+                , url: "/user/getUserInfo"
+                , dataType: 'json'
+                , success: function (result) {
+                    $('#name').val(result.name);
+                }
+                , error: function (ex) {
+                    console.warn(ex.responseText);
+                }
+            });
+
+
+            form.verify({
+                oldPwd: function (value) {
+                    if (value.length < 1) {
+                        return '请填写旧密码';
+                    }
+                }
+                , newPwd: function (value) {
+                    if (value.length < 1) {
+                        return '请填写新密码';
+                    } else if (value.length < 5 || value.length > 20) {
+                        return '密码应在5位与20位之间';
+                    } else if (value === $('[name="oldPwd"]').val()) {
+                        return "新密码不能和旧密码相同";
+                    }
+                }
+                , newPwd2: function (value) {
+                    if (value.length < 1) {
+                        return '请填写确认密码';
+                    } else if (value !== $('#newPwd').val()) {
+                        return '确认密码与新密码不一致';
+                    }
+                }
+            });
+
+
+            //监听提交
+            form.on('submit(changePwd)', function (data) {
+
+                $("[lay-filter='changePwd']").addClass("layui-btn-disabled").prop("disabled", true).text("修改中…");
+                layui.layer.closeAll('tips');
+                com.ajax({
+                    url: '/user/ResetPwdByCurrentUser',
+                    data: JSON.stringify(data.field),
+                    showMsg: true,
+                    success:function () {
+                        $("[lay-filter='changePwd']").removeClass("layui-btn-disabled").prop("disabled", false).text("立即修改");
+                    },
+                    error:function () {
+                        $("[lay-filter='changePwd']").removeClass("layui-btn-disabled").prop("disabled", false).text("立即修改");
+                    }
+                })
+                return false;
+            });
+
+        });//layui.use结束括号
+    })
+    ;//jquery结束括号
+</script>
+</body>
+
+</html>

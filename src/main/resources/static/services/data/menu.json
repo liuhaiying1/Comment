@@ -1,0 +1,115 @@
+{
+	"code": 200,
+	"token": "taVJM3Ba3lD/YmU19m1VLj9BrBMs8CdS",
+	"msg": null,
+	"data": [
+		{
+			"title": "主页",
+			"icon": "&#xe68e;",
+			"href": "/pages/main/main.html",
+			"spread": "false",
+			"children": []
+		},
+		{
+			"title": "用户模块",
+			"icon": "&#xe7ae;",
+			"href": "",
+			"spread": "false",
+			"children": [
+				{
+					"title": "我的评论",
+					"icon": "&#xe62a;",
+					"href": "/evaluate/index",
+					"spread": "false",
+					"children": []
+				},
+				{
+					"title": "商家收藏",
+					"icon": "&#xe62a;",
+					"href": "/collection/index?type=1",
+					"spread": "false",
+					"children": []
+				},	{
+					"title": "点评收藏",
+					"icon": "&#xe62a;",
+					"href": "/collection/index?type=2",
+					"spread": "false",
+					"children": []
+				},
+				{
+					"title": "美食点评",
+					"icon": "&#xe62a;",
+					"href": "/food/list",
+					"spread": "false",
+					"children": []
+				},
+				{
+					"title": "美食推荐",
+					"icon": "&#xe62a;",
+					"href": "/userRecommend/index",
+					"spread": "false",
+					"children": []
+				}
+			]
+		},
+		{
+			"title": "商家模块",
+			"icon": "&#xe7ae;",
+			"href": "",
+			"spread": "false",
+			"children": [
+				{
+					"title": "菜肴管理",
+					"icon": "&#xe62a;",
+					"href": "/food/index",
+					"spread": "false",
+					"children": []
+				},
+				{
+					"title": "商家回复评论",
+					"icon": "&#xe62a;",
+					"href": "/evaluate/bussiness",
+					"spread": "false",
+					"children": []
+				}
+
+			]
+		},
+		{
+			"title": "管理员模块",
+			"icon": "&#xe672;",
+			"href": "",
+			"spread": "false",
+			"children": [
+				{
+					"title": "类别管理",
+					"icon": "&#xe647;",
+					"href": "/type/index",
+					"spread": "false",
+					"children": []
+				},
+				{
+					"title": "商家管理",
+					"icon": "&#xe638;",
+					"href": "/bussiness/index",
+					"spread": "false",
+					"children": []
+				},
+				{
+					"title": "用户管理",
+					"icon": "&#xe634;",
+					"href": "/user/index",
+					"spread": "false",
+					"children": []
+				},
+				{
+					"title": "评论管理",
+					"icon": "&#xe647;",
+					"href": "/evaluate/admin",
+					"spread": "false",
+					"children": []
+				}
+			]
+		}
+	]
+}

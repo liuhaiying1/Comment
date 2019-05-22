@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>美食点评</title>
+    <link href="/plugins/layui/css/layui.css" rel="stylesheet" media="all"/>
+    <style>
+        .layui-upload-img {
+            width: 92px;
+            height: 92px;
+            margin: 0 10px 10px 0;
+        }
+
+        .layui-badge {
+            height: 35px;
+            line-height: 35px;
+        }
+    </style>
+</head>
+
+<body>
+<div class="layui-container" style="margin-top:15px;">
+    <form class="layui-form" method="post" action="/evaluate/edit" id="v-app">
+        <div class="layui-form-item">
+            <div class="layui-inline">
+                <input type="hidden" name="id" value=""/>
+                <label class="layui-form-label"><span style="color:red">*</span>总体评价</label>
+                <div class="layui-input-inline">
+                    <div id="overall"></div>
+                    <input type="hidden" name="overall">
+                </div>
+            </div>
+            <div class="layui-inline">
+                <label class="layui-form-label"><span style="color:red">*</span>口味</label>
+                <div class="layui-input-inline">
+                    <div id="flavor"></div>
+                    <input type="hidden" name="flavor">
+                </div>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <div class="layui-inline">
+                <label class="layui-form-label"><span style="color:red">*</span>环境</label>
+                <div class="layui-input-inline">
+                    <div id="env"></div>
+                    <input type="hidden" name="env">
+                </div>
+            </div>
+            <div class="layui-inline">
+                <label class="layui-form-label"><span style="color:red">*</span>服务</label>
+                <div class="layui-input-inline">
+                    <div id="service"></div>
+                    <input type="hidden" name="service">
+                </div>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label"><span style="color:red">*</span>评价</label>
+            <div class="layui-input-block">
+                <textarea name="message" id="" cols="30" rows="10" class="layui-textarea" required lay-verify="required"
+                ></textarea>
+            </div>
+        </div>
+
+        <div class="layui-form-item">
+            <label class="layui-form-label"><span style="color:red">*</span>上传图片</label>
+            <div class="layui-input-block">
+                <div class="layui-upload">
+                    <button type="button" class="layui-btn" id="imgFile">
+                        <i class="layui-icon">&#xe67c;</i>上传图片
+                    </button>
+                    <blockquote class="layui-elem-quote layui-quote-nm" style="margin-top: 10px;">
+                        预览图：
+                        <div class="layui-upload-list" id="demo2"></div>
+                    </blockquote>
+                </div>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <div class="layui-input-block">
+                <button class="layui-btn" lay-submit="" lay-filter="form">点评</button>
+            </div>
+        </div>
+    </form>
+</div>
+
+<script src="/plugins/jquery.min.js"></script>
+<script src="/plugins/layui/layui.all.js"></script>
+<script src="/js/main.js"></script>
+<script type="text/javascript" th:inline="none">
+    var cc = {
+        setForm: function (id, bussinessid, callback) {
+
+            layui.use(['form'], function () {
+                var form = layui.form;
+                form.verify({});
+                var rate = layui.rate;
+                layui.form.on('submit(form)', function (data) {
+                    var s1 = [];
+                    $.each($('#demo2 img'), function (i, v) {
+                        var re = $(v).attr('data-id');
+                        s1.push(re);
+                    });
+                    if (s1.length == 0) {
+                        layer.msg('请上传图片!');
+                        return false;
+                    }
+                    data.field.imgFile = s1.join('*');
+                    data.field.bussinessid = bussinessid;
+                    com.ajax({
+                        url: data.form.action,
+                        data: JSON.stringify(data.field),
+                        showMsg: true,
+                        success: callback
+                    });
+                    return false;
+                });
+
+                com.getInfoById('/evaluate', id,
+                    function (res) {
+                        rate.render({
+                            elem: '#overall'  //绑定元素
+                            , half: true
+                            , value: res.overall
+                            , choose: function (value) {
+                                $("input[name=overall]").val(value);
+                            }
+                        });
+                        rate.render({
+                            elem: '#flavor'  //绑定元素.
+                            , half: true
+                            , value: res.flavor
+                            , choose: function (value) {
+                                $("input[name=flavor]").val(value);
+                            }
+                        });
+                        rate.render({
+                            elem: '#env'  //绑定元素
+                            , half: true
+                            , value: res.env
+                            , choose: function (value) {
+                                $("input[name=env]").val(value);
+                            }
+                        });
+                        rate.render({
+                            elem: '#service'  //绑定元素
+                            , half: true
+                            , value: res.service
+                            , choose: function (value) {
+                                $("input[name=service]").val(value);
+                            }
+                        });
+
+                        var uploadInst1 = layui.upload.render({
+                            elem: '#imgFile' //绑定元素
+                            , url: '/file/upload' //上传接口
+                            , accept: 'images'
+                            , done: function (res) {
+                                if (res.success) {
+                                    var d = Math.random().toString(36).substr(2);
+                                    var img = '<img src="/file/download?fileToken=' + res.errCode + '&newName=' + res.errCode + '" class="layui-upload-img" data-id="' + res.errCode + '">';
+                                    $('#demo2').append('<div class="image-container" id="container' + d + '"><div class="delete-css"><button id="upload_img_' + d + '" type="button" class="layui-btn layui-btn-danger layui-btn-xs">删除</button></div>' + img + '</div>')
+
+                                    setTimeout(function () {
+                                        $("#upload_img_" + d).on('click', function () {
+                                            $("#container" + d).remove();
+                                        });
+                                    }, 1000)
+                                } else {
+                                    return layer.msg('上传失败');
+                                }
+                            }
+                            , error: function () {
+                                layer.msg('上传失败！');
+
+                            }
+                        });
+
+
+                        if (res.imgFile != null) {
+                            var s1 = res.imgFile.split('*');
+                            $.each(s1, function (i, v) {
+                                var img = '<img src="/file/download?fileToken=' + v + '&newName=' + v + '" class="layui-upload-img" data-id="' + v + '">';
+                                $('#demo2').append('<div class="image-container" id="container' + i + '"><div class="delete-css"></div>' + img + '</div>')
+                            });
+                        }
+
+                        layui.form.render();
+                    });
+            });
+        }
+    }
+</script>
+</body>
+</html>

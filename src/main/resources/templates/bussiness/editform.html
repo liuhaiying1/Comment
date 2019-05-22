@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>美食点评</title>
+    <link href="/plugins/layui/css/layui.css" rel="stylesheet" media="all"/>
+    <link rel="stylesheet" href="/plugins/city-picker/city-picker.css">
+    <style>
+        .layui-upload-img {
+            width: 92px;
+            height: 92px;
+            margin: 0 10px 10px 0;
+        }
+
+        .image-container img:hover {
+            border: 1px dashed #eaeaea;
+        }
+    </style>
+</head>
+
+<body>
+<div class="layui-container" style="margin-top:15px;">
+    <form class="layui-form" method="post" action="/bussiness/edit" id="v-app">
+        <div class="layui-form-item">
+            <div class="layui-inline">
+                <input type="hidden" name="id" value=""/>
+                <label class="layui-form-label"><span style="color:red">*</span>总体评价</label>
+                <div class="layui-input-inline">
+                    <div id="sum"></div>
+                    <input type="hidden" name="sum">
+                </div>
+            </div>
+            <div class="layui-inline">
+                <label class="layui-form-label"><span style="color:red">*</span>口味</label>
+                <div class="layui-input-inline">
+                    <div id="flavor"></div>
+                    <input type="hidden" name="flavor">
+                </div>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <div class="layui-inline">
+                <input type="hidden" name="id" value=""/>
+                <label class="layui-form-label"><span style="color:red">*</span>环境</label>
+                <div class="layui-input-inline">
+                    <div id="env"></div>
+                    <input type="hidden" name="env">
+                </div>
+            </div>
+            <div class="layui-inline">
+                <label class="layui-form-label"><span style="color:red">*</span>服务</label>
+                <div class="layui-input-inline">
+                    <div id="service"></div>
+                    <input type="hidden" name="service">
+                </div>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">浏览量</label>
+            <div class="layui-input-block">
+                <input type="text" name="pre" required autocomplete="off" class="layui-input layui-disabled"
+                       lay-verify="required" disabled>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label"><span style="color:red">*</span>店名</label>
+            <div class="layui-input-block">
+                <input type="hidden" name="id" value=""/>
+                <input type="hidden" name="userid" value=""/>
+                <input type="hidden" name="name" value=""/>
+                <input type="hidden" name="status">
+                <input type="text" name="title" required autocomplete="off" class="layui-input layui-disabled"
+                       lay-verify="required" disabled>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label"><span style="color:red">*</span>商家图片</label>
+            <div class="layui-input-block">
+                <input type="hidden" name="bussinessFile">
+                <button type="button" class="layui-btn" id="bussinessFile">
+                    <i class="layui-icon">&#xe67c;</i>上传图片
+                </button>
+                <div class="layui-upload-list" id="dddd">
+                    <div class="delete-css">
+                        <button id="upload_img_dddd" type="button" class="layui-btn layui-btn-danger layui-btn-xs">删除
+                        </button>
+                    </div>
+                    <img class="layui-upload-img" id="demo1">
+                    <p id="demoText"></p>
+                </div>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label"><span style="color:red">*</span>商家电话</label>
+            <div class="layui-input-block">
+                <input type="text" name="phone" required lay-verify="required" placeholder="请输入商家电话" autocomplete="off"
+                       class="layui-input">
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label"><span style="color:red">*</span>营业时间</label>
+            <div class="layui-input-block">
+                <input type="text" name="bussinessHours" required lay-verify="required" placeholder="请输入营业时间"
+                       autocomplete="off" class="layui-input">
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label"><span style="color:red">*</span>人均</label>
+            <div class="layui-input-block">
+                <input type="text" name="percapiita" required lay-verify="required" placeholder="请输入人均"
+                       autocomplete="off" class="layui-input">
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label"><span style="color:red">*</span>食品安全档案</label>
+            <div class="layui-input-block">
+                <div class="layui-upload">
+                    <button type="button" class="layui-btn" id="imgFileName">
+                        <i class="layui-icon">&#xe67c;</i>上传图片
+                    </button>
+                    <blockquote class="layui-elem-quote layui-quote-nm" style="margin-top: 10px;">
+                        预览图：
+                        <div class="layui-upload-list" id="demo2"></div>
+                    </blockquote>
+                </div>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label"><span style="color:red">*</span>环境的图片</label>
+            <div class="layui-input-block">
+                <div class="layui-upload">
+                    <button type="button" class="layui-btn" id="envFile">
+                        <i class="layui-icon">&#xe67c;</i>上传图片
+                    </button>
+                    <blockquote class="layui-elem-quote layui-quote-nm" style="margin-top: 10px;">
+                        预览图：
+                        <div class="layui-upload-list" id="demo3"></div>
+                    </blockquote>
+                </div>
+            </div>
+        </div>
+
+        <div class="layui-form-item">
+            <label class="layui-form-label width_auto text-r" style="margin-top:2px"><span style="color:red">*</span>省市县：</label>
+            <div class="layui-input-block" style="width: 400px;">
+                <input type="text" autocomplete="on" class="layui-input" id="city" name="city" required
+                       lay-verify="required"
+                       readonly="readonly" data-toggle="city-picker" placeholder="请选择">
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label"><span style="color:red">*</span>地址</label>
+            <div class="layui-input-block">
+                <input type="text" name="address" required lay-verify="required" placeholder="请输入地址" autocomplete="off"
+                       class="layui-input">
+                <input type="hidden" name="lng">
+                <input type="hidden" name="lat">
+            </div>
+        </div>
+        <div style="margin-bottom:100px;">
+            <div style="float: left; width: 100%; height: 308px; margin-left: 2%;">
+                <div id="allmap" class="map" style=" width: 100%; height: 100%; "></div>
+            </div>
+        </div>
+
+        <div class="layui-form-item">
+            <div class="layui-input-block">
+                <button class="layui-btn" lay-submit="" lay-filter="form">立即提交</button>
+            </div>
+        </div>
+    </form>
+</div>
+
+<script src="/plugins/jquery.min.js"></script>
+<script src="/plugins/layui/layui.all.js"></script>
+<script src="/js/main.js"></script>
+<script src="/plugins/city-picker/city-picker.data.js"></script>
+<script src="/plugins/city-picker/city-picker.js"></script>
+
+<script type="text/javascript"
+        src="http://api.map.baidu.com/api?ak=hnbepoAdkngYjUInMiwRUSC4gRtLADLa&v=2.0&services=false"></script>
+<script type="text/javascript" th:inline="none">
+    var mp;
+    var currentPicker;
+    var cc = {
+        addMarker: function (point) {
+            var marker = new BMap.Marker(point);
+            mp.clearOverlays();
+            mp.addOverlay(marker);
+        },
+        setMap: function () {
+            mp = new BMap.Map("allmap");
+            var pointLongitude = $('input[name=lng]').val();
+            var pointLatitude = $('input[name=lat]').val();
+            var point = new BMap.Point(116.404, 39.915);
+            if (pointLongitude != undefined && pointLatitude != undefined && pointLongitude != 0 && pointLatitude != undefined) {
+                point = new BMap.Point(pointLongitude, pointLatitude);
+                cc.addMarker(point);
+            }
+            mp.centerAndZoom(point, 14);
+            mp.enableScrollWheelZoom();
+            mp.enableInertialDragging();
+
+            mp.enableContinuousZoom();
+
+            // 添加带有定位的导航控件
+            var navigationControl = new BMap.NavigationControl({
+                // 靠左上角位置
+                anchor: BMAP_ANCHOR_TOP_RIGHT,
+                // LARGE类型
+                type: BMAP_NAVIGATION_CONTROL_LARGE,
+                // 启用显示定位
+                enableGeolocation: true
+            });
+            mp.addControl(navigationControl);
+
+            var size = new BMap.Size(10, 20);
+            mp.addControl(new BMap.CityListControl({
+                anchor: BMAP_ANCHOR_TOP_LEFT,
+                offset: size
+            }));
+
+            // 添加带有定位的导航控件
+            var navigationControl = new BMap.NavigationControl({
+                // 靠左上角位置
+                anchor: BMAP_ANCHOR_TOP_RIGHT,
+                // LARGE类型
+                type: BMAP_NAVIGATION_CONTROL_LARGE,
+                // 启用显示定位
+                enableGeolocation: true
+            });
+            mp.addControl(navigationControl);
+            //单击地图，直接更新表单中的所属省份，所属市，详细地址，经纬度，并且在地图上标记一个点
+            mp.addEventListener("click", function (e) {
+                var point = new BMap.Point(e.point.lng, e.point.lat);
+                var gc1 = new BMap.Geocoder();
+                gc1.getLocation(point, function (rs) {
+                    var addComp = rs.addressComponents;
+                    $('input[name=address]').val(addComp.street + addComp.streetNumber);
+                    currentPicker.setValue(addComp.province + '/' + addComp.city + '/' + addComp.district);
+                });
+                $('input[name=lng]').val(e.point.lng);
+                $('input[name=lat]').val(e.point.lat);
+                cc.addMarker(point)
+            });
+        },
+        setForm: function (id, callback) {
+            var upload = layui.upload;
+            $("#upload_img_dddd").on('click', function () {
+                $('#demo1').attr('src', '');
+                $('input[name=bussinessFile]').val('');
+            });
+            //执行实例
+            var uploadInst = layui.upload.render({
+                elem: '#bussinessFile' //绑定元素
+                , url: '/file/upload' //上传接口
+                , accept: 'images'
+                , done: function (res) {
+                    if (res.success) {
+                        $('input[name=bussinessFile]').val(res.errCode)
+                        $('#demo1').attr('src', '/file/download?fileToken=' + res.errCode + '&newName=' + res.errCode); //图片链接（base64）
+                    } else {
+                        return layer.msg('上传失败');
+                    }
+                }
+                , error: function () {
+                    layer.msg('上传失败！');
+                }
+            });
+
+            var uploadInst1 = layui.upload.render({
+                elem: '#imgFileName' //绑定元素
+                , url: '/file/upload' //上传接口
+                , accept: 'images'
+                , done: function (res) {
+                    if (res.success) {
+                        var d = Math.random().toString(36).substr(2);
+                        var img = '<img src="/file/download?fileToken=' + res.errCode + '&newName=' + res.errCode + '" class="layui-upload-img" data-id="' + res.errCode + '">';
+                        $('#demo2').append('<div class="image-container" id="container' + d + '"><div class="delete-css"><button id="upload_img_' + d + '" type="button" class="layui-btn layui-btn-danger layui-btn-xs">删除</button></div>' + img + '</div>')
+
+                        setTimeout(function () {
+                            $("#upload_img_" + d).on('click', function () {
+                                $("#container" + d).remove();
+                            });
+                        }, 1000)
+                    } else {
+                        return layer.msg('上传失败');
+                    }
+                }
+                , error: function () {
+                    layer.msg('上传失败！');
+
+                }
+            });
+
+            var uploadInst2 = layui.upload.render({
+                elem: '#envFile' //绑定元素
+                , url: '/file/upload' //上传接口
+                , accept: 'images'
+                , done: function (res) {
+                    if (res.success) {
+                        var d = Math.random().toString(36).substr(2);
+                        var img = '<img src="/file/download?fileToken=' + res.errCode + '&newName=' + res.errCode + '" class="layui-upload-img" data-id="' + res.errCode + '">';
+                        $('#demo3').append('<div class="image-container" id="container1' + d + '"><div class="delete-css"><button id="upload_img_1' + d + '" type="button" class="layui-btn layui-btn-danger layui-btn-xs">删除</button></div>' + img + '</div>')
+                        setTimeout(function () {
+                            $("#upload_img_1" + d).on('click', function () {
+                                $("#container1" + d).remove();
+                            });
+                        }, 1000)
+                    } else {
+                        return layer.msg('上传失败');
+                    }
+                }
+                , error: function () {
+                    layer.msg('上传失败！');
+
+                }
+            });
+
+            layui.use(['form'], function () {
+                var form = layui.form;
+                //自定义验证规则
+                form.verify({});
+                 currentPicker = new layui.cityPicker("#city", {
+                    provincename: "provinceId",
+                    cityname: "cityId",
+                    districtname: "districtId",
+                    level: 'districtId',// 级别
+                });
+
+                //监听提交
+                layui.form.on('submit(form)', function (data) {
+                    if (data.field.bussinessFile == "") {
+                        layer.msg('请上传商家图片');
+                        return false;
+                    }
+                    var s1 = [];
+                    $.each($('#demo2 img'), function (i, v) {
+                        var re = $(v).attr('data-id');
+                        s1.push(re);
+                    });
+                    var s2 = [];
+                    $.each($('#demo3 img'), function (i, v) {
+                        var re = $(v).attr('data-id');
+                        s2.push(re);
+                    });
+                    if (s1.length == 0) {
+                        layer.msg('请上传食品安全档案')
+                        return false;
+                    }
+                    if (s2.length == 0) {
+                        layer.msg('请上传环境的图片')
+                        return false;
+                    }
+                    data.field.imgFileName = s1.join('*');
+                    data.field.envFile = s2.join('*');
+                    com.ajax({
+                        url: data.form.action,
+                        data: JSON.stringify(data.field),
+                        showMsg: true,
+                        success: callback
+                    });
+                    return false;
+                });
+
+                com.getInfoById('/bussiness', id,
+                    function (res) {
+                        var rate = layui.rate;
+                        currentPicker.setValue(res.city);
+                        cc.setMap();
+                        rate.render({
+                            elem: '#sum'  //绑定元素
+                            , half: true
+                            , value: res.sum, readonly: true
+                            , choose: function (value) {
+                                $("input[name=sum]").val(value);
+                            }
+                        });
+
+                        rate.render({
+                            elem: '#flavor'  //绑定元素
+                            , half: true
+                            , value: res.flavor, readonly: true
+                            , choose: function (value) {
+                                $("input[name=flavor]").val(value);
+                            }
+                        });
+
+                        rate.render({
+                            elem: '#env'  //绑定元素
+                            , half: true
+                            , value: res.env, readonly: true
+                            , choose: function (value) {
+                                $("input[name=env]").val(value);
+                            }
+                        });
+                        rate.render({
+                            elem: '#service'  //绑定元素
+                            , half: true
+                            , value: res.service
+                            , readonly: true
+                            , choose: function (value) {
+                                $("input[name=service]").val(value);
+                            }
+                        });
+
+                        if (res.userid != 0 && res.userid != null) {
+                            $('#demo1').attr('src', '/file/download?fileToken=' + res.bussinessFile + '&newName=' + res.bussinessFile);
+                            var s1 = res.imgFileName.split('*');
+                            $.each(s1, function (i, v) {
+                                var img = '<img src="/file/download?fileToken=' + v + '&newName=' + v + '" class="layui-upload-img" data-id="' + v + '">';
+                                $('#demo2').append('<div class="image-container" id="container' + i + '"><div class="delete-css"><button id="upload_img_' + i + '" type="button" class="layui-btn layui-btn-danger layui-btn-xs">删除</button></div>' + img + '</div>')
+                                $("#upload_img_" + i).bind('click', function () {
+                                    $("#container" + i).remove();
+                                });
+
+                                //删除某图片
+                                $("#upload_img_" + i).bind('click', function () {
+                                    $("#container" + i).remove();
+                                });
+                            })
+                            var s2 = res.envFile.split('*');
+                            $.each(s2, function (i, v) {
+                                var img = '<img src="/file/download?fileToken=' + v + '&newName=' + v + '" class="layui-upload-img" data-id="' + v + '">';
+                                $('#demo3').append('<div class="image-container" id="container1' + i + '"><div class="delete-css"><button id="upload_img_1' + i + '" type="button" class="layui-btn layui-btn-danger layui-btn-xs">删除</button></div>' + img + '</div>')
+
+                                $("#upload_img_1" + i).bind('click', function () {
+                                    $("#container1" + i).remove();
+                                });
+                            })
+                        }
+
+                        layui.form.render();
+
+                    });
+            });
+        }
+    }
+
+    cc.setForm(0)
+</script>
+</body>
+</html>

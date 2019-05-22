@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>美食点评</title>
+    <link href="/plugins/layui/css/layui.css" rel="stylesheet" media="all"/>
+    <style>
+        .top15 {
+            margin-top: 15px;
+        }
+
+        .layui-table-cell {
+            height: auto !important;
+            white-space: normal;
+        }
+
+        .laytable-cell-1-0-1 {
+            width: 100%;
+            height: 100%;
+        }
+
+        .layui-table img {
+            max-width: 100px;
+            min-height: 100px;
+        }
+    </style>
+</head>
+
+<body>
+<div class="layui-fluid top15">
+    <script type="text/html" id="bardgGrid">
+        <a class="layui-btn layui-btn-xs" lay-event="edit">编辑</a>
+        <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del">删除</a>
+    </script>
+    <div class="layui-row">
+        <div class="layui-col-md2">
+            <ul class="layui-nav layui-nav-tree" lay-filter="test">
+            </ul>
+        </div>
+        <div class="layui-col-md10">
+            <div class="layui-row toolbar">
+                <div class="layui-col-md6 layui-col-xs12">
+                    <button class="layui-btn layui-btn-small" id="btn-refresh"><i class="layui-icon">&#x1002;</i>刷新
+                    </button>
+                    <button class="layui-btn layui-btn-normal layui-btn-small" id="btn-add"><i class="layui-icon">&#xe654;</i>新增
+                    </button>
+                </div>
+                <div class="layui-col-md6  layui-col-xs12">
+                    <div class="layui-col-md6 layui-col-xs12 text-right">
+                        <input food="text" class="layui-input" id="search-name" placeholder="按美食名称查询"/>
+                    </div>
+                    <div class="layui-col-md6 layui-col-xs12 text-right">
+                        <button class="layui-btn layui-btn-danger layui-btn-small" id="btn-search"><i
+                                class="layui-icon">&#xe615;</i>查询
+                        </button>
+                        <button class="layui-btn layui-btn-warm layui-btn-small" id="btn-clear"><i class="layui-icon">&#xe63d;</i>清空
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <table id="dgGrid" lay-filter="dgGrid"></table>
+        </div>
+    </div>
+
+</div>
+<script type="text/html" id="foodTpl">
+    <div style="width:100px;height: 100px;">
+        <img src="/file/download?fileToken={{d.food}}&newName={{d.food}}" alt="">
+    </div>
+</script>
+<script src="/plugins/jquery.min.js"></script>
+<script src="/plugins/layui/layui.all.js"></script>
+<script src="/js/main.js"></script>
+<script type="text/javascript" th:inline="none">
+    //执行一个 table 实例
+    layui.table.render({
+        elem: '#dgGrid'
+        , height: 490
+        , method: 'get'
+        , url: '/food/'
+        , page: true
+        , cellMinWidth: 80 //全局定义常规单元格的最小宽度，layui 2.2.1 新增
+        , request: {
+            pageName: 'page' //页码的参数名称，默认：page
+            , limitName: 'size' //每页数据量的参数名，默认：limit
+        }
+        , where: {
+            search: $('#search-name').val()
+            , typeid: 0
+        }
+        , cols: [[
+            {field: 'id', title: '编号', width: 60}
+            , {field: 'food', title: '图片', width: 120, templet: '#foodTpl'}
+            , {field: 'introduce', title: '美食名', width: 120}
+            , {field: 'price', title: '价格', width: 120}
+            , {field: 'sort', title: '排序', width: 120}
+            , {
+                field: 'ifrecommend', title: '推荐', width: 70, templet: function (d) {
+                    if(d.ifrecommend==1){
+                        return '<span class="layui-badge layui-bg-green">是</span>';
+                    }else{
+                        return '<span class="layui-badge layui-bg-gray">否</span>';
+                    }
+                }
+            }
+            , {width: 200, align: 'center', title: '操作', toolbar: '#bardgGrid'}
+        ]]
+        , parseData: function (res) { //res 即为原始返回的数据
+            return {
+                "code": 0, //解析接口状态
+                "msg": "", //解析提示文本
+                "count": res.totalElements, //解析数据长度
+                "data": res.content //解析数据列表
+            };
+        }
+    });
+    com.bindFilter('/food/');
+
+    com.ajax({
+        type: 'get',
+        url: '/type/?page=1&size=100000&search=',
+        success: function (res) {
+            $.each(res.content, function (i, v) {
+                $('.layui-nav-tree').append('<li class="layui-nav-item" data-id="' + v.id + '"><a href="javascript:void(0);" onclick="cc.filter(\'' + v.id + '\',this)">' + v.name + '</a></li>');
+            });
+        }
+    })
+
+    var cc = {
+        filter: function (id, $this) {
+            $($this).parents('ul').find('li').removeClass('layui-this')
+            $($this).parent('li').addClass('layui-this');
+            layui.table.reload('dgGrid',
+                {
+                    url: '/food/',
+                    where: {
+                        'search': $('#search-name').val()
+                        , 'typeid': id
+                    }
+                });
+        },
+        editInfo: function (title, id) {
+            $.layerOpen({
+                title: title,
+                width: '600px',
+                height: '600px',
+                content: '/food/form',
+                btn: [],
+                success: function (iframebody, iframeWin, index) {
+                    iframeWin.cc.setForm(id, function (data) {
+                        $.layerClose(index);
+                        com.filter('/food/')
+                    });
+                }
+            });
+        },
+        bindEvent: function () {
+            //监听工具条
+            layui.table.on('tool(dgGrid)', function (obj) { //注：tool是工具条事件名，test是table原始容器的属性 lay-filter="对应的值"
+                var data = obj.data //获得当前行数据
+                    , layEvent = obj.event; //获得 lay-event 对应的值
+                if (layEvent === 'del') {
+                    layer.confirm('真的删除此条记录么', {icon: 3, title: '提示'}, function (index) {
+
+                        layer.close(index);
+                        $.post('/food/delete/' + data.id, {}, function (d) {
+                            layer.msg(d.errMsg);
+                            main.filter();
+                        }, 'json');
+                    });
+                } else if (layEvent === 'edit') {
+                    cc.editInfo('编辑', data.id);
+                }
+            });
+
+            $('#btn-add').on('click', function () {
+                cc.editInfo('新增', 0);
+            });
+        }
+    }
+
+    cc.bindEvent();
+</script>
+</body>
+</html>

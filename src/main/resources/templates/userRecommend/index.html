@@ -1,0 +1,138 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <link href="/plugins/layui/css/layui.css" rel="stylesheet" media="all"/>
+    <link rel="stylesheet" href="/css/list.css">
+    <link rel="stylesheet" href="/plugins/city-picker/city-picker.css">
+    <style>
+        body {
+            background-color: #F2F2F2;
+        }
+
+        .post {
+            background: #f8f8f8;
+        }
+
+        .top_menu {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+
+<body>
+<div class="post-item layui-row">
+    <div class="post layui-col-md10 layui-col-md-offset1">
+        <div class="post-wrap">
+            <!--动态加载推荐信息-->
+        </div>
+        <div id="laypage"><!--显示底部页面栏--></div>
+    </div>
+</div>
+<script src="/plugins/jquery.min.js"></script>
+<script src="/plugins/layui/layui.all.js"></script>
+<script src="/js/main.js"></script>
+
+<script type="text/javascript">
+
+
+    $(function () {
+        var page = 1;
+        var limit = 15;
+        var total;
+        var city = "", address = "", direction = "DESC", orderby = "pre";
+        var vm = {
+            loadData: function (page, size, search, city, address, orderby, direction) {
+                com.ajax({
+                    type: 'get',
+                    url: '/userRecommend/getBussiness',
+                    success: function (d) {
+                        var html = ''
+                        for (var i = 0; i < d.length; i++) {
+                            html += com.format_str('<ul class="post-list">\
+                            <li class="clearfix">\
+                            <div class="post-image">\
+                            <a href="/food/details?id={0}"><img src="/file/download?fileToken={1}&newName={1}"  onerror="javascript:this.src=\'/images/face.jpg\';"></a>\
+                            </div>\
+                            <div class="post-content">\
+                            <div class="post-title"><a href="/food/details?id={0}">{9}</a></div>\
+                        <div class="post-other">\
+                            <div class="post-other-left">\
+                            <span class="post-username">营业时间:{2}</span>\
+                        <span>&nbsp;商家电话:</span>\
+                        <span class="post-time">&nbsp;{3}</span>\
+                        <span>&nbsp;人均:&nbsp;</span>\
+                        <span class="post-reply-time">{4}</span>\
+                        <span>&nbsp;浏览量:&nbsp;</span>\
+                        <span class="post-reply-time">{10}</span>\
+                            </div>\
+                            <div class="post-other-right">\
+                            <span class="post-reply-count">口味:</span>&nbsp;{5}\
+                            <span class="post-like-count">环境: </span>&nbsp;{6}\
+                            <span class="post-scan-count">服务: </span>{7}\
+                            </div>\
+                            </div>\
+                            <div class="post-other">\
+                            <div class="post-other-left">\
+                            地址:<span class="">{8}</span>\
+                        </div>\
+                        </div>\
+                        </div>\
+                        </li>\
+                        </ul>', d[i].id, d[i].bussinessFile, d[i].bussinessHours, d[i].phone, d[i].percapiita, d[i].flavor, d[i].env, d[i].service, d[i].city + " " + d[i].address, d[i].title, d[i].pre);
+                        }
+                        if(html==''){
+                            html='<h2 class="">暂无推荐</h2>';
+                        }
+                        $(".post-wrap").empty().append(html);
+                        vm.getPage(page);
+                    }
+                });
+
+            },
+            getPage: function (page) {
+                var laypage = layui.laypage;
+                //执行一个laypage实例
+                laypage.render({
+
+                    elem: 'laypage' //注意，这里的 test1 是 ID，不用加 # 号
+                    , count: total //数据总数，从服务端得到
+                    , curr: page
+                    , first: '首页'
+                    , last: '尾页'
+                    , prev: '<em>←</em>'
+                    , next: '<em>→</em>'
+                    , limit: limit   //每页条数设置
+                    , jump: function (obj, first) {
+                        if (!first) {
+                            vm.loadData(obj.curr, obj.limit, '', city, address, orderby, direction)  //加载数据
+                        }
+                    }
+                });
+            },
+            setForm: function () {
+                //监听提交
+                layui.form.on('submit(search)', function (data) {
+                    if (data.field.direction == 'on') {
+                        direction = "ASC";
+                    } else {
+                        direction = "DESC";
+                    }
+                    city = data.field.city;
+                    address = data.field.address;
+                    orderby = data.field.orderby;
+
+                    vm.loadData(page, limit, '', data.field.city, data.field.address, data.field.orderby, direction);
+                    return false;
+                });
+            }
+        }
+        vm.loadData(page, limit, '', city, address, orderby, direction);
+        vm.setForm();
+    });
+
+</script>
+</body>
+</html>
